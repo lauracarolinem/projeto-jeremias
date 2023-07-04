@@ -25,8 +25,9 @@ class IDProc {
     }
 
     loadProgram(content) {
-        this.labels = this.extractLabels(content);
-        this.instrucoes = this.parser(content);
+        const contentClean = this.cleanProgram(content);
+        this.labels = this.extractLabels(contentClean);
+        this.instrucoes = this.parser(contentClean);
     }
 
     parser(content) {
@@ -182,6 +183,7 @@ class IDProc {
         }
         return instrucoes;
     }
+
     extractLabels(instrucoes) {
         const labels = {};
         const tamanho = instrucoes.length;
@@ -197,7 +199,7 @@ class IDProc {
     }
 
     executeNextInstruction() {
-        const instruction = this.program[this.IPT];
+        const instruction = this.instrucoes[this.IPT];
         if (!instruction) {
             console.log('Program execution finished.');
             return;
@@ -339,7 +341,6 @@ class IDProc {
 // Função para executar o programa após a leitura do arquivo
 function runProgram(program) {
     const processor = new IDProc();
-    processor.cleanProgram(program);
     processor.loadProgram(program);
     processor.executeNextInstruction();
 }
