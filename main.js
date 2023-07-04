@@ -10,40 +10,39 @@ class IDProc {
         this.labels = {}; // Map of labels and their corresponding indices
     }
 
-    // clean(instrucoes) {
-    //     const linhas_sem_vazio = [];
-    //     for (let i = 0; i < instrucoes.length; i++) {
-    //         if (instrucoes[i] !== '') {
-    //             linhas_sem_vazio.push(instrucoes[i]);
-    //         }
-    //     }
-    //     if (linhas_sem_vazio.length > 32) {
-    //         console.log('Erro: O programa excede o limite máximo de 32 instruções.');
-    //         return;
-    //     }
-    //     return linhas_sem_vazio;
-    // }
-
-    loadProgram(content) {
-        this.instrucoes = clean(content);
-        this.labels = this.extractLabels(content);
-        this.instrucoes = parser(content);
-    }
-
-    parser(content) {
-        const linhas_sem_vazio =[];
-        for (let i = 0; i < content.length; i++) {
-            if (content[i] !== '') {
-                linhas_sem_vazio.push(content[i]);
+    cleanProgram(instrucoes) {
+        const linhas_sem_vazio = [];
+        for (let i = 0; i < instrucoes.length; i++) {
+            if (instrucoes[i] !== '') {
+                linhas_sem_vazio.push(instrucoes[i]);
             }
         }
         if (linhas_sem_vazio.length > 32) {
             console.log('Erro: O programa excede o limite máximo de 32 instruções.');
             return;
         }
+        return linhas_sem_vazio;
+    }
+
+    loadProgram(content) {
+        this.labels = this.extractLabels(content);
+        this.instrucoes = this.parser(content);
+    }
+
+    parser(content) {
+        const linhas_sem_vazio = this.cleanProgram(content);
+        // for (let i = 0; i < content.length; i++) {
+        //     if (content[i] !== '') {
+        //         linhas_sem_vazio.push(content[i]);
+        //     }
+        // }
+        // if (linhas_sem_vazio.length > 32) {
+        //     console.log('Erro: O programa excede o limite máximo de 32 instruções.');
+        //     return;
+        // }
         const instrucoes = [];
         for (let i = 0; i < linhas_sem_vazio.length; i++) {
-            const instrucao = program[i].split(' ');
+            const instrucao = content[i].split(' ');
             switch (instrucao[0]) {
                 case 'NOP':
                     if (instrucao.length !== 1) {
@@ -176,170 +175,171 @@ class IDProc {
                     }
                     break;
                 default:
-                    
+
                     break;
             }
-            instrucoes.push(instrucao); 
+            instrucoes.push(instrucao);
         }
         return instrucoes;
     }
-        // extractLabels(instrucoes) {
-        //     const labels = {};
-        //     const tamanho = program.length;
-        //     for (let i = 0; i < tamanho; i++) {
-        //         const instruction = program[i];
-        //         if (instruction.endsWith(':')) {
-        //             const label = instruction.slice(0, -1);
-        //             //console.log(label);
-        //             labels[label] = i;
-        //         }
-        //     }
-        //     return labels;
-        // }
-
-        executeNextInstruction() {
-            const instruction = this.program[this.IPT];
-            if (!instruction) {
-                console.log('Program execution finished.');
-                return;
+    extractLabels(instrucoes) {
+        const labels = {};
+        const tamanho = instrucoes.length;
+        for (let i = 0; i < tamanho; i++) {
+            const instruction = instrucoes[i];
+            if (instruction.endsWith(':')) {
+                const label = instruction.slice(0, -1);
+                //console.log(label);
+                labels[label] = i;
             }
+        }
+        return labels;
+    }
 
-            const [opcode, ...args] = instruction.split(' ');
+    executeNextInstruction() {
+        const instruction = this.program[this.IPT];
+        if (!instruction) {
+            console.log('Program execution finished.');
+            return;
+        }
 
-            switch (opcode) {
-                case 'NOP':
-                    // No operation
-                    break;
+        const [opcode, ...args] = instruction.split(' ');
 
-                case 'MOV':
-                    this.mov(args[0], parseInt(args[1]));
-                    break;
+        switch (opcode) {
+            case 'NOP':
+                // No operation
+                break;
 
-                case 'SAV':
-                    this.sav();
-                    break;
+            case 'MOV':
+                this.mov(args[0], parseInt(args[1]));
+                break;
 
-                case 'SWP':
-                    this.swp();
-                    break;
+            case 'SAV':
+                this.sav();
+                break;
 
-                case 'NEG':
-                    this.neg();
-                    break;
+            case 'SWP':
+                this.swp();
+                break;
 
-                case 'ADD':
-                    this.add(parseInt(args[0]));
-                    break;
+            case 'NEG':
+                this.neg();
+                break;
 
-                case 'SUB':
-                    this.sub(parseInt(args[0]));
-                    break;
+            case 'ADD':
+                this.add(parseInt(args[0]));
+                break;
 
-                case 'PNT':
-                    this.pnt();
-                    break;
+            case 'SUB':
+                this.sub(parseInt(args[0]));
+                break;
 
-                case 'JMP':
+            case 'PNT':
+                this.pnt();
+                break;
+
+            case 'JMP':
+                this.jmp(args[0]);
+                return;
+
+            case 'JEQ':
+                if (this.ACC === 0) {
                     this.jmp(args[0]);
                     return;
+                }
+                break;
 
-                case 'JEQ':
-                    if (this.ACC === 0) {
-                        this.jmp(args[0]);
-                        return;
-                    }
-                    break;
+            case 'JNZ':
+                if (this.ACC !== 0) {
+                    this.jmp(args[0]);
+                    return;
+                }
+                break;
 
-                case 'JNZ':
-                    if (this.ACC !== 0) {
-                        this.jmp(args[0]);
-                        return;
-                    }
-                    break;
+            case 'JGZ':
+                if (this.ACC > 0) {
+                    this.jmp(args[0]);
+                    return;
+                }
+                break;
 
-                case 'JGZ':
-                    if (this.ACC > 0) {
-                        this.jmp(args[0]);
-                        return;
-                    }
-                    break;
-
-                case 'JLZ':
-                    if (this.ACC < 0) {
-                        this.jmp(args[0]);
-                        return;
-                    }
-                    break;
-                default:
-                    // Verificar se a instrução é uma label
-                    if (instruction.endsWith(':')) {
-                        // Tratamento para labels
-                        const label = instruction.slice(0, -1);
-                        this.labels[label] = this.IPT;
-                    } else {
-                        console.log(`Unknown instruction: ${instruction}`);
-                    }
+            case 'JLZ':
+                if (this.ACC < 0) {
+                    this.jmp(args[0]);
+                    return;
+                }
+                break;
+            default:
+                // Verificar se a instrução é uma label
+                if (instruction.endsWith(':')) {
+                    // Tratamento para labels
+                    const label = instruction.slice(0, -1);
+                    this.labels[label] = this.IPT;
+                } else {
                     console.log(`Unknown instruction: ${instruction}`);
-            }
-
-            this.IPT++;
-            this.executeNextInstruction();
+                }
+                console.log(`Unknown instruction: ${instruction}`);
         }
 
-        mov(register, immediate) {
-            switch (register) {
-                case 'ACC':
-                    this.ACC = immediate;
-                    break;
+        this.IPT++;
+        this.executeNextInstruction();
+    }
 
-                case 'NIL':
-                    this.NIL = immediate;
-                    break;
+    mov(register, immediate) {
+        switch (register) {
+            case 'ACC':
+                this.ACC = immediate;
+                break;
 
-                default:
-                    console.log(`Invalid register: ${register}`);
-            }
+            case 'NIL':
+                this.NIL = immediate;
+                break;
+
+            default:
+                console.log(`Invalid register: ${register}`);
         }
+    }
 
-        sav() {
-            this.BNK = this.ACC;
-        }
+    sav() {
+        this.BNK = this.ACC;
+    }
 
-        swp() {
-            const temp = this.ACC;
-            this.ACC = this.BNK;
-            this.BNK = temp;
-        }
+    swp() {
+        const temp = this.ACC;
+        this.ACC = this.BNK;
+        this.BNK = temp;
+    }
 
-        neg() {
-            this.ACC = -this.ACC;
-        }
+    neg() {
+        this.ACC = -this.ACC;
+    }
 
-        add(immediate) {
-            this.ACC += immediate;
-        }
+    add(immediate) {
+        this.ACC += immediate;
+    }
 
-        sub(immediate) {
-            this.ACC -= immediate;
-        }
+    sub(immediate) {
+        this.ACC -= immediate;
+    }
 
-        pnt() {
-            console.log(this.ACC);
-        }
+    pnt() {
+        console.log(this.ACC);
+    }
 
-        jmp(label) {
-            const targetIndex = this.labels[label];
-            if (targetIndex !== undefined) {
-                this.IPT = targetIndex;
-            } else {
-                console.log(`Label not found: ${label}`);
-            }
+    jmp(label) {
+        const targetIndex = this.labels[label];
+        if (targetIndex !== undefined) {
+            this.IPT = targetIndex;
+        } else {
+            console.log(`Label not found: ${label}`);
         }
+    }
 
 }
 // Função para executar o programa após a leitura do arquivo
 function runProgram(program) {
     const processor = new IDProc();
+    processor.cleanProgram(program);
     processor.loadProgram(program);
     processor.executeNextInstruction();
 }
