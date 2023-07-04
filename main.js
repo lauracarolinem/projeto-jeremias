@@ -28,6 +28,7 @@ class IDProc {
         const contentClean = this.cleanProgram(content);
         this.labels = this.extractLabels(contentClean);
         this.instrucoes = this.parser(contentClean);
+        this.instrucoes = this.executeNextInstruction(contentClean);
     }
 
     parser(content) {
@@ -103,12 +104,12 @@ class IDProc {
                     break;
 
                 case 'SUB':
-                    if (instrucao.length !== 1) {
-                        console.log('Erro: A instrução SUB não deve ter argumentos.');
+                    if (instrucao.length !== 2) {
+                        console.log('Erro: A instrução SUB não deve ter mais de um argumento.');
                         return;
                     }
-                    intTeste = parseInt(instrucao[2]);
-                    if (intTeste === NaN || intTeste < -127 || intTeste > 128) {
+                    const intTeste2 = parseInt(instrucao[2]);
+                    if (intTeste2 === NaN || intTeste2 < -127 || intTeste2 > 128) {
                         console.log('Erro: O segundo argumento da instrução SUB deve ser um número inteiro de 8 bits.');
                         return;
                     }
@@ -198,14 +199,14 @@ class IDProc {
         return labels;
     }
 
-    executeNextInstruction() {
-        const instruction = this.instrucoes[this.IPT];
-        if (!instruction) {
+    executeNextInstruction(content) {
+        content = this.instrucoes[this.IPT];
+        if (!content) {
             console.log('Program execution finished.');
             return;
         }
 
-        const [opcode, ...args] = instruction.split(' ');
+        const [opcode, ...args] = content.split(' ');
 
         switch (opcode) {
             case 'NOP':
